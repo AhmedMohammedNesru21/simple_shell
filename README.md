@@ -1,104 +1,257 @@
-.TH HSH 0.1 "september 2022" "ALX - Cohort 08" "ALX Simple Shell"
-.SH NAME
-.B hsh
-- command interpreter (simple shell).
-.SH SYNOPSIS
-hsh [filename]
 
-.SH DESCRIPTION
-.B hsh
-is the standard command interpreter for the system. This man page is not intended to be a tutorial or a complete specification of the shell.
 
-.B Overview
+# Simple Shell project 0x16.c 
 
-The simple shell is a command that reads lines from either a file or the terminal, interprets them, and generally executes other commands. It is the program that is started when a user logs into the system. It incorporates many features to aid interactive use and has the advantage that the interpretative language is common to both interactive and non-interactive use (shell scripts). That is, commands can be typed directly to the running simple shell or can be put into a file, which can be executed directly by the simple shell.
+This is a simple UNIX command interpreter based on bash and Sh.
 
-.B Invocation
+## Overview
 
-The first non-option argument specified on the command line will be treated as the name of a file from which to read commands (a shell script), and the remaining arguments are set as the positional parameters of the shell ($1, $2, etc.). Otherwise, the shell reads commands from its standard input.
+**hshy** is a sh-compatible command language interpreter that executes commands read from the standard input or from a file.
 
-.B Commands
+### Invocation
 
-The shell interprets the words it reads according to a language, the specification of which is outside the scope of this man page (refer to the BNF in the IEEE Std 1003.2 ("POSIX.2")document). Essentially though, a line is read and if the first word of the line (or after	a control operator) is not a keyword, then the shell has recognized a simple command. Otherwise, a complex command or some other special construct may have been recognized.
+Usage: **hsh** 
+hsh is started with the standard input connected to the terminal. To start, compile all .c located in this repository by using this command: 
+```
+gcc -Wall -Werror -Wextra -pedantic *.c -o hsh
+./hsh
+```
 
-.B Search and Execution
+**hsh** is allowed to be invoked interactively and non-interactively. If **hsh** is invoked with standard input not connected to a terminal, it reads and executes received commands in order.
 
-There are three types of commands: simple shell functions, built-in commands, and normal programs. The command is searched for (by name) in that order. The three types of commands are all executed in a different way.
-
-When a shell function is executed, all of the shell positional parameters (except $0, which remains unchanged) are set to the arguments of the shell function. The variables which are explicitly placed in the environment of the command (by placing assignments to them before the function name) are made local to the function and are set to the values given. Then the command given in the function definition is executed. The positional parameters are restored to their original values when the command completes. This all occurs within the current simple shell.
-
-Shell built-in commands are executed internally to the simple shell, without spawning a new process. There are two kinds of built-in commands: regular and special. Assignments before special builtins persist after they finish executing and assignment errors, redirection errors and certain operand errors cause a script to be aborted. Special builtins cannot be overridden with a function. Both regular and special builtins can affect the shell in ways normal programs cannot.
-
-Otherwise, if the command name does not match a function or built-in command, the command is searched for as a normal program in the file system (as described in the next section). When a normal program is executed, the shell runs the program, passing the arguments and the environment to the program. If the program is not a normal executable file (i.e., if it does not begin with the "magic number" whose ASCII representation is "#!", resulting in an ENOEXEC return value from execve(2)) but appears to be a text file, the shell will run a new instance of
-.B sh
-to interpret it.
-
-.B Path Search
-
-When locating a command, the shell first looks to see if it has a shell function by that name. Then it looks for a builtin command by that name. If a built-in command is not found, one of two things happen:
-
-1. Command names containing a slash are simply executed without performing any searches.
-
-2. The shell searches each entry in the PATH variable in turn for the command. The value of the PATH variable should be a series of entries separated by colons. Each entry consists of a directory name. The current directory may be indicated implicitly by an empty directory name, or explicitly by a single period.
-
-.B Command Exit Status
-
-Each command has an exit status that can influence the behavior of other shell commands. The paradigm is that a command exits with zero for normal or success, and non-zero for failure, error, or a false indication. The man page for each command should indicate the various exit codes and what they mean. Additionally, the built-in commands return exit codes, as does an executed shell function.
-
-If a command is terminated by a signal, its exit status is greater than 128. The signal name can be found by passing the exit status to kill -l.
-
-If there is no command word, the exit status is the exit status of the last command substitution executed, or zero if the command does not contain any command substitutions.
-
-.SH ENVIRONMENT
-Environment variables affect the execution of
-.B sh
-:
-
-     ENV	Initialization file for interactive shells.
-
-.SH EXIT STATUS
-Errors that are detected by the shell, such as a syntax error, will cause the shell to exit with a non-zero exit status. If the shell is not an interactive shell, the execution of the shell file will be aborted. Otherwise the shell will return the exit status of the last command executed, or if the
-.B exit
-builtin is used with a numeric argument, it will return the argument.
-
-.SH EXAMPLES
-Below an example of interactive mode:
-
-.RS +4
-$ ./hsh
-.RE
-.RS +4
-($) /bin/ls
-.RE
-.RS +4
-hsh main.c shell.c
-.RE
-.RS +4
-($)
-.RE
-.RS +4
-($) exit
-.RE
-.RS +4
+Example:
+```
+$ echo "echo 'alx'" | ./hsh
+'alx'
 $
+```
 
-.SH HISTORY
-.B hsh
-is a POSIX-compliant implementation of /bin/sh that aims to be as small as possible.
-.B hsh
-is a descendant of the first
-.B sh
-version of Unix that appeared in Version 1 AT&T UNIX in 1971, written by Ken Thompson in AT&T Bell Laboratories. That version of
-.B sh
-was rewritten in 1989 under the BSD license after the Bourne shell from AT&T System V Release 4 UNIX, which inherited the name
-.B sh.
-It was a simple command interpreter, not designed for scripting, but nonetheless introduced several innovative features to the command-line interface and led to the development of the later Unix shells.
+When **hsh** is invoked with standard input connected to a terminal (determined by isatty(3), the interactive mode is opened. **hsh** Will be using the following prompt `^-^ `.
 
-.SH BUGS
-No known bugs until now.
+Example:
+```
+$./hsh
+^-^
+```
 
-.SH CREDITS 
-This man page is created for academic purpose, to make our Simple Shell project by Ahmed Mohammed Nesru & Samson Otori, ALX School Students.
+If a command line argument is invoked, **hsh** will take that first argument as a file from which to read commands.
 
-.SH AUTHORS
-Ahmed Mohammed Nesru & Samson Otori
+Example:
+```
+$ cat text
+echo 'alx'
+$ ./hsh text
+'alx'
+$
+```
+
+### Environment
+
+Upon invocation, **hsh** receives and copies the environment of the parent process in which it was executed. This environment is an array of *name-value* strings describing variables in the format *NAME=VALUE*. A few key environmental variables are:
+
+#### HOME
+The home directory of the current user and the default directory argument for the **cd** builtin command.
+
+```
+$ echo "echo $HOME" | ./hsh
+/home/vagrant
+```
+
+#### PWD
+The current working directory as set by the **cd** command.
+
+```
+$ echo "echo $PWD" | ./hsh
+/home/vagrant/alx/simple_shell
+```
+
+#### OLDPWD
+The previous working directory as set by the **cd** command.
+
+```
+$ echo "echo $OLDPWD" | ./hsh
+/home/vagrant/alx/bog-062019-test_suite
+```
+
+#### PATH
+A colon-separated list of directories in which the shell looks for commands. A null directory name in the path (represented by any of two adjacent colons, an initial colon, or a trailing colon) indicates the current directory.
+
+```
+$ echo "echo $PATH" | ./hsh
+/home/vagrant/.cargo/bin:/home/vagrant/.local/bin:/home/vagrant/.rbenv/plugins/ruby-build/bin:/home/vagrant/.rbenv/shims:/home/vagrant/.rbenv/bin:/home/vagrant/.nvm/versions/node/v10.15.3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/vagrant/.cargo/bin:/home/vagrant/workflow:/home/vagrant/.local/bin
+```
+
+### Command Execution
+
+After receiving a command, **hsh** tokenizes it into words using `" "` as a delimiter. The first word is considered the command and all remaining words are considered arguments to that command. **hsh** then proceeds with the following actions:
+1. If the first character of the command is neither a slash (`\`) nor dot (`.`), the shell searches for it in the list of shell builtins. If there exists a builtin by that name, the builtin is invoked.
+2. If the first character of the command is none of a slash (`\`), dot (`.`), nor builtin, **hsh** searches each element of the **PATH** environmental variable for a directory containing an executable file by that name.
+3. If the first character of the command is a slash (`\`) or dot (`.`) or either of the above searches was successful, the shell executes the named program with any remaining given arguments in a separate execution environment.
+
+### Exit Status 
+
+**hsh** returns the exit status of the last command executed, with zero indicating success and non-zero indicating failure.
+If a command is not found, the return status is 127; if a command is found but is not executable, the return status is 126.
+All builtins return zero on success and one or two on incorrect usage (indicated by a corresponding error message).
+
+### Signals
+
+While running in interactive mode, **hsh** ignores the keyboard input ctrl+c. Alternatively, an input of End-Of-File ctrl+d will exit the program.
+
+User hits ctrl+d in the foutrh command.
+```
+$ ./hsh
+^-^ ^C
+^-^ ^C
+^-^ ^C
+^-^
+```
+
+### Variable Replacement
+
+**hsh** interprets the `$` character for variable replacement.
+
+#### $ENV_VARIABLE
+`ENV_VARIABLE` is substituted with its value.
+
+Example:
+```
+$ echo "echo $PWD" | ./hsh
+/home/vagrant/alx/simple_shell
+```
+
+#### $?
+`?` is substitued with the return value of the last program executed.
+
+Example:
+```
+$ echo "echo $?" | ./hsh
+0
+```
+
+#### $$
+The second `$` is substitued with the current process ID.
+
+Example:
+```
+$ echo "echo $$" | ./hsh
+3855
+```
+
+### Comments
+
+**hsh** ignores all words and characters preceeded by a `#` character on a line.
+
+Example:
+```
+$ echo "echo 'alx' #this will be ignored!" | ./hsh
+'alx'
+```
+
+### Operators
+
+**hsh** specially interprets the following operator characters:
+
+#### ; - Command separator
+Commands separated by a `;` are executed sequentially.
+
+Example:
+```
+$ echo "echo 'hello' ; echo 'world'" | ./hsh
+'hello'
+'world'
+```
+
+#### && - AND logical operator
+`command1 && command2`: `command2` is executed if, and only if, `command1` returns an exit status of zero.
+
+Example:
+```
+$ echo "error! && echo 'alx'" | ./hsh
+./shellby: 1: error!: not found
+$ echo "echo 'my name is' && echo 'alx'" | ./hsh
+'my name is'
+'alx'
+```
+
+#### || - OR logical operator
+`command1 || command2`: `command2` is executed if, and only if, `command1` returns a non-zero exit status.
+
+Example:
+```
+$ echo "error! || echo 'wait for it'" | ./hsh
+./hsh: 1: error!: not found
+'wait for it'
+```
+
+The operators `&&` and `||` have equal precedence, followed by `;`.
+
+### Builtin Commands
+
+#### cd
+  * Usage: `cd [DIRECTORY]`
+  * Changes the current directory of the process to `DIRECTORY`.
+  * If no argument is given, the command is interpreted as `cd $HOME`.
+  * If the argument `-` is given, the command is interpreted as `cd $OLDPWD` and the pathname of the new working directory is printed to standad output.
+  * If the argument, `--` is given, the command is interpreted as `cd $OLDPWD` but the pathname of the new working directory is not printed.
+  * The environment variables `PWD` and `OLDPWD` are updated after a change of directory.
+
+Example:
+```
+$ ./hsh
+^-^ pwd
+/home/vagrant/alx/simple_shell
+$ cd ../
+^-^ pwd
+/home/vagrant/alx
+^-^ cd -
+^-^ pwd
+/home/vagrant/alx/simple_shell
+```
+
+#### exit
+  * Usage: `exit [STATUS]`
+  * Exits the shell.
+  * The `STATUS` argument is the integer used to exit the shell.
+  * If no argument is given, the command is interpreted as `exit 0`.
+
+Example:
+```
+$ ./hsh
+$ exit
+```
+
+#### env
+  * Usage: `env`
+  * Prints the current environment.
+
+Example:
+```
+$ ./hsh
+$ env
+NVM_DIR=/home/vagrant/.nvm
+...
+```
+
+#### setenv
+  * Usage: `setenv [VARIABLE] [VALUE]`
+  * Initializes a new environment variable, or modifies an existing one.
+  * Upon failure, prints a message to `stderr`.
+
+Example:
+```
+$ ./hsh
+$ setenv NAME Alx
+$ echo $NAME
+Alx
+```
+
+#### unsetenv
+  * Usage: `unsetenv [VARIABLE]`
+  * Removes an environmental variable.
+  * Upon failure, prints a message to `stderr`.
+
+
+
+
+
